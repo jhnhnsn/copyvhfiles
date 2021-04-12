@@ -1,0 +1,6 @@
+{
+    "host": "FTP SERVER NAME OR IP",
+    "port": 21,
+    "username": "FTP USERNAME",
+    "password": "FTP PASSWORD"
+}
