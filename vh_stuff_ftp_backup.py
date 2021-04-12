@@ -4,20 +4,19 @@ from os import listdir, mkdir, path
 from ftplib import FTP
 import json
 
+
+## Edit and rename vhbuconfig-SAMPLE.json
 CONFIG_FILE = './vhbuconfig.json'
 
-def read_config_file():
-    #read config json
-    with open(CONFIG_FILE) as file:
-        config_json = json.load(file)
-    return config_json
-
-conf = read_config_file()
+#read config file and initialize
+with open(CONFIG_FILE) as file:
+    conf = json.load(file)
 
 host = conf["host"]
 port = conf["port"]
 username = conf["username"]
 password = conf["password"]
+ftp_substring = conf["ftp_substring"]
 
 #set up local folders
 # vh user data location
@@ -70,7 +69,7 @@ for listing in listings:
 #find the files that match the server string
 files_to_download = []
 for match in filenames:
-    if "mixer" in match:
+    if ftp_substring in match:
         files_to_download.append(match)
 
 f = files_to_download[0] #replace with loop for all matching files
