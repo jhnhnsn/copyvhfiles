@@ -12,18 +12,15 @@ CONFIG_FILE = './vhbuconfig.json'
 with open(CONFIG_FILE) as file:
     conf = json.load(file)
 
+#initialize vars with config file values
 host = conf["host"]
 port = conf["port"]
 username = conf["username"]
 password = conf["password"]
 ftp_substring = conf["ftp_substring"]
-
-#set up local folders
-# vh user data location
-vh_user_data_dir = r"C:\Users\johnh\AppData\LocalLow\IronGate\Valheim"
-
-# where to put character and world backups
-vh_backup_root_dir = r"C:\Users\johnh\OneDrive\Valheim\local_vh_backup"
+ftp_subdir = conf["ftp_subdir"]
+vh_user_data_dir = conf["vh_user_data_dir"]
+vh_backup_root_dir = conf["vh_backup_root_dir"]
 
 #full paths to char and world folders
 vh_char_path = path.join(vh_user_data_dir, "characters")
@@ -34,28 +31,30 @@ vh_backup_dir = str(datetime.now().strftime("%m-%d-%Y_%H-%M-%S-%f"))
 vh_backup_fullpath = path.join(vh_backup_root_dir, vh_backup_dir)
 
 #make backup parent dir
+print("Making directory: " + vh_backup_fullpath)
 mkdir(vh_backup_fullpath)
 
 vh_char_backup_fullpath = (path.join(vh_backup_fullpath + "/character"))
-vh_world_backup_fullpath =  (path.join(vh_backup_fullpath + "/world"))
-vh_ftp_world_backup_fullpath = (path.join(vh_backup_fullpath + "/mixer_crew_server"))
+vh_world_backup_fullpath =  (path.join(vh_backup_fullpath + "/local_world"))
+vh_ftp_world_backup_fullpath = (path.join(vh_backup_fullpath + "/server_world"))
 
 #make directory for ftp files
+print("Making directory: " + vh_ftp_world_backup_fullpath)
 mkdir(vh_ftp_world_backup_fullpath)
 
-#print("Backup up from: " + vh_user_data_dir + " to: " + vh_backup_fullpath)
-
 #actually copy
+print("Backing up local files from: " + vh_user_data_dir + " to: " + vh_backup_fullpath)
 copytree(vh_char_path, vh_char_backup_fullpath)
 copytree(vh_world_path, vh_world_backup_fullpath)
 
 #Copy FTP server files from g-portal
 ftp = FTP()
 #connect
+print("Connecting to ftp server: " + host)
 ftp.connect(host, port)
 ftp.login(username, password)
 #change dir
-ftp.cwd("save/worlds")
+ftp.cwd(ftp_subdir)
 
 #list files and put filenames in an array
 listings = []
@@ -67,6 +66,7 @@ for listing in listings:
     filenames.append(fname)
 
 #find the files that match the server string
+print("Downloading all files matching substring " + ftp_substring)
 files_to_download = []
 for match in filenames:
     if ftp_substring in match:
@@ -81,3 +81,4 @@ for f in files_to_download:
 
 #close connection
 ftp.quit()
+print("All done.")
