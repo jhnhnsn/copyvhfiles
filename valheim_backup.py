@@ -5,26 +5,29 @@ from ftplib import FTP
 import json
 
 ## Edit and rename vhbuconfig-SAMPLE.json
-CONFIG_FILE = './vhbuconfig.json'
+script_dir = path.dirname(path.abspath(__file__))
+CONFIG_FILE = path.join(script_dir, "vhbuconfig.json")
+print("Script full path: " + CONFIG_FILE)
 ftp_backup_enabled = False
 
 #read config file and initialize
 try:
     with open(CONFIG_FILE) as file:
         conf = json.load(file)
-except:
-    print("Oopsy. Couldn't fine the config file.")
+    
+    #initialize vars with config file values
+    host = conf["host"]
+    port = conf["port"]
+    username = conf["username"]
+    password = conf["password"]
+    ftp_substring = conf["ftp_substring"]
+    ftp_subdir = conf["ftp_subdir"]
+    vh_user_data_dir = conf["vh_user_data_dir"]
+    vh_backup_root_dir = conf["vh_backup_root_dir"]
+    ftp_backup_enabled = conf["ftp_backup_enabled"] 
 
-#initialize vars with config file values
-host = conf["host"]
-port = conf["port"]
-username = conf["username"]
-password = conf["password"]
-ftp_substring = conf["ftp_substring"]
-ftp_subdir = conf["ftp_subdir"]
-vh_user_data_dir = conf["vh_user_data_dir"]
-vh_backup_root_dir = conf["vh_backup_root_dir"]
-ftp_backup_enabled = conf["ftp_backup_enabled"] 
+except Exception as e:
+    print("Oopsy. Couldn't find the config file." + e)
 
 #full paths to char and world folders
 vh_char_path = path.join(vh_user_data_dir, "characters")
@@ -97,7 +100,7 @@ def ftpbu():
         ftp.quit()
 
     except:
-        print("FTP step failed. Check config file settings and try again.")
+        print("FTP step failed. Check config file settings and try again. ")
 #execute remote backup - add option based on config file
 if ftp_backup_enabled:
     ftpbu()
