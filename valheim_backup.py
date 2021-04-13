@@ -6,6 +6,7 @@ import json
 
 ## Edit and rename vhbuconfig-SAMPLE.json
 CONFIG_FILE = './vhbuconfig.json'
+ftp_backup_enabled = False
 
 #read config file and initialize
 try:
@@ -23,6 +24,7 @@ ftp_substring = conf["ftp_substring"]
 ftp_subdir = conf["ftp_subdir"]
 vh_user_data_dir = conf["vh_user_data_dir"]
 vh_backup_root_dir = conf["vh_backup_root_dir"]
+ftp_backup_enabled = conf["ftp_backup_enabled"] 
 
 #full paths to char and world folders
 vh_char_path = path.join(vh_user_data_dir, "characters")
@@ -38,58 +40,69 @@ mkdir(vh_backup_fullpath)
 
 vh_char_backup_fullpath = (path.join(vh_backup_fullpath + "/character"))
 vh_world_backup_fullpath =  (path.join(vh_backup_fullpath + "/local_world"))
-vh_ftp_world_backup_fullpath = (path.join(vh_backup_fullpath + "/server_world"))
 
-#make directory for ftp files
-print("Making directory: " + vh_ftp_world_backup_fullpath)
-mkdir(vh_ftp_world_backup_fullpath)
+def localbu():
+    #actually copy
+    print("Backing up local files from: " + vh_user_data_dir + " to: " + vh_backup_fullpath)
+    try:
+        copytree(vh_char_path, vh_char_backup_fullpath)
+        copytree(vh_world_path, vh_world_backup_fullpath)
+    except:
+        print("Couldn't copy local backup files. Check that the config file is correct")
 
-#actually copy
-print("Backing up local files from: " + vh_user_data_dir + " to: " + vh_backup_fullpath)
-try:
-    copytree(vh_char_path, vh_char_backup_fullpath)
-    copytree(vh_world_path, vh_world_backup_fullpath)
-except:
-    print("Couldn't copy local backup files. Check that the config file is correct")
+#exec local backup - no option
+localbu()
 
-#Copy FTP server files from g-portal
-try:
-    ftp = FTP()
-    #connect
-    print("Connecting to ftp server: " + host)
-    ftp.connect(host, port)
-    ftp.login(username, password)
-    #change dir
-    ftp.cwd(ftp_subdir)
+def ftpbu():
+    vh_ftp_world_backup_fullpath = (path.join(vh_backup_fullpath + "/server_world"))
 
-    #list files and put filenames in an array
-    listings = []
-    filenames = []
-    ftp.retrlines('LIST', listings.append)
-    for listing in listings:
-        f = listing.split(None, 8)
-        fname = f[8]
-        filenames.append(fname)
+    #make directory for ftp files
+    print("Making directory for server files: " + vh_ftp_world_backup_fullpath)
+    mkdir(vh_ftp_world_backup_fullpath)
 
-    #find the files that match the server string
-    print("Downloading all files matching substring " + ftp_substring)
-    files_to_download = []
-    for match in filenames:
-        if ftp_substring in match:
-            files_to_download.append(match)
+    #Copy FTP server files from g-portal
+    try:
+        ftp = FTP()
+        #connect
+        print("Connecting to ftp server: " + host)
+        ftp.connect(host, port)
+        ftp.login(username, password)
+        #change dir
+        ftp.cwd(ftp_subdir)
 
-    f = files_to_download[0] #replace with loop for all matching files
-    for f in files_to_download:
-        local_filename = path.join(vh_ftp_world_backup_fullpath, f)
-        lf = open(local_filename, "wb")
-        ftp.retrbinary("RETR " + f, lf.write)
-        lf.close()
+        #list files and put filenames in an array
+        listings = []
+        filenames = []
+        ftp.retrlines('LIST', listings.append)
+        for listing in listings:
+            f = listing.split(None, 8)
+            fname = f[8]
+            filenames.append(fname)
 
-    #close connection
-    ftp.quit()
+        #find the files that match the server string
+        print("Downloading all files matching substring " + ftp_substring)
+        files_to_download = []
+        for match in filenames:
+            if ftp_substring in match:
+                files_to_download.append(match)
 
-except:
-    print("FTP step failed. Check config file settings and try again.")
+        f = files_to_download[0] #replace with loop for all matching files
+        for f in files_to_download:
+            local_filename = path.join(vh_ftp_world_backup_fullpath, f)
+            lf = open(local_filename, "wb")
+            ftp.retrbinary("RETR " + f, lf.write)
+            lf.close()
+
+        #close connection
+        ftp.quit()
+
+    except:
+        print("FTP step failed. Check config file settings and try again.")
+#execute remote backup - add option based on config file
+if ftp_backup_enabled:
+    ftpbu()
+else:
+    print("FTP backup disabled")
 
 print("All done.")
     

@@ -1,10 +1,11 @@
 {
+    "vh_user_data_dir": "C:/Users/{USER}/AppData/LocalLow/IronGate/Valheim",
+    "vh_backup_root_dir": "C:/Users/{USER}/Desktop/local_vh_backup",
+    "ftp_backup_enabled": false,
     "host": "FTP SERVER NAME OR IP",
     "port": 21,
     "username": "FTP USERNAME",
     "password": "FTP PASSWORD",
     "ftp_substring": "world",
-    "ftp_subdir": "save/worlds",
-    "vh_user_data_dir": "C:/Users/{USER}/AppData/LocalLow/IronGate/Valheim",
-    "vh_backup_root_dir": "C:/Users/{USER}/Desktop/local_vh_backup"
+    "ftp_subdir": "save/worlds"
 }
